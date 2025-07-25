@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/loginDB');
+mongoose.connect("mongodb://loginUser:login1234@127.0.0.1:27017/loginDB?authSource=loginDB");
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => {
