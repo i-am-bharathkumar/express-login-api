@@ -46,10 +46,6 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    if (user.loggedIn) {
-      return res.status(403).json({ message: "This user is already logged in from another session" });
-    }
-
     // Set loggedIn true
     user.loggedIn = true;
     await user.save();
