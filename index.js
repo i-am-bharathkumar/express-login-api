@@ -1,32 +1,39 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const dotenv = require('dotenv');
+dotenv.config();
+
 const app = express();
-const port = 5000;
+const PORT = process.env.PORT || 5000;
+
+// Import Routes
+const authRoutes = require('./Routes/authRoute');
+const protectedRoutes = require('./Routes/protectedRoute');
+
+// Import User Model (✅ FIX: Model moved to separate file)
+const User = require('./models/User');
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
+// Route Middleware
+app.use("/api/auth", authRoutes);
+app.use("/api", protectedRoutes);
+
 // MongoDB Connection
-mongoose.connect("mongodb://loginUser:login1234@127.0.0.1:27017/loginDB?authSource=loginDB");
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.on('error', console.error.bind(console, '❌ MongoDB connection error:'));
 db.once('open', () => {
-  console.log('Connected to MongoDB');
+  console.log('✅ Connected to MongoDB');
 });
 
-// Mongoose Schema
-const userSchema = new mongoose.Schema({
-  username: String,
-  email: { type: String, unique: true }, // ensure unique emails
-  password: String,
-  loggedIn: { type: Boolean, default: false }
-});
-
-const User = mongoose.model('User', userSchema);
-
-// API Endpoint
+// Login Route
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
   console.log('🔵 Login:', email);
@@ -46,7 +53,6 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ message: "Invalid password" });
     }
 
-    // Set loggedIn true
     user.loggedIn = true;
     await user.save();
 
@@ -58,7 +64,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-
+// Register Route
 app.post('/register', async (req, res) => {
   const { username, email, password, confirmPassword } = req.body;
   console.log('🔵 Register:', { username, email });
@@ -87,6 +93,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
+// Logout Route
 app.post('/logout', async (req, res) => {
   const { email } = req.body;
 
@@ -104,7 +111,7 @@ app.post('/logout', async (req, res) => {
   }
 });
 
-
+// List All Users Route (for testing)
 app.get("/users", async (req, res) => {
   try {
     const users = await User.find();
@@ -114,6 +121,5 @@ app.get("/users", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Start Server
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
